@@ -1,12 +1,13 @@
+from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from .filters import PostFilter
-from .models import Post
+from .models import Comment, Post
 from .pagination import DefaultPageNumberPagination
-from .permissions import IsOwnerOrReadOnly
-from .serializers import PostSerializer
+from .permissions import IsCommentOwnerOrReadOnly, IsOwnerOrReadOnly
+from .serializers import CommentSerializer, PostSerializer
 
 
 class PostViewSet(ModelViewSet):
@@ -34,8 +35,16 @@ class PostViewSet(ModelViewSet):
         else, active posts only.
         """
         if self.request.user.is_staff:
-            return Post.objects.select_related("author").prefetch_related("tags").all()
-        return Post.objects.select_related("author").filter(is_active=True)
+            return (
+                Post.objects.select_related("author")
+                .prefetch_related("tags")
+                .annotate(comments_count=Count("comments"))
+            )
+        return (
+            Post.objects.select_related("author")
+            .filter(is_active=True)
+            .annotate(comments_count=Count("comments"))
+        )
 
     def get_serializer_context(self):
         """
@@ -44,3 +53,29 @@ class PostViewSet(ModelViewSet):
         context = super().get_serializer_context()
         context["author"] = self.request.user
         return context
+
+
+class CommentViewSet(ModelViewSet):
+    serializer_class = CommentSerializer
+
+    def get_permissions(self):
+        if self.request.user.is_staff:
+            return [IsAuthenticated()]
+        return [IsAuthenticated(), IsCommentOwnerOrReadOnly()]
+
+    def get_serializer_context(self):
+        """
+        Pass extra context to serializer.
+        """
+        context = super().get_serializer_context()
+        context["user"] = self.request.user
+        context["post_pk"] = self.kwargs["post_pk"]
+        return context
+
+    def get_queryset(self):
+        """
+        Returns filtered comments with passed in post pk
+        """
+        return Comment.objects.select_related("user", "post").filter(
+            post_id=self.kwargs["post_pk"]
+        )

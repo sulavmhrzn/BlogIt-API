@@ -17,10 +17,4 @@ class PostFilter(FilterSet):
                     "lookup_expr": "icontains",
                 },
             },
-            models.BooleanField: {
-                "filter_class": django_filters.BooleanFilter,
-                "extra": lambda f: {
-                    "widget": forms.CheckboxInput,
-                },
-            },
         }

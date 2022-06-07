@@ -25,7 +25,7 @@ class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     title = models.CharField(max_length=255)
     description = models.TextField()
-    slug = models.SlugField()
+    slug = models.SlugField(blank=True)
     tags = TaggableManager(through=UUIDTaggedItem)
     is_active = models.BooleanField(default=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -40,3 +40,17 @@ class Post(models.Model):
             self.slug = slugify(self.title)
 
         return super().save(*args, **kwargs)
+
+
+class Comment(models.Model):
+    """
+    Model representing a Comment for a Post.
+    """
+
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid4)
+    text = models.TextField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+
+    def __str__(self):
+        return self.text

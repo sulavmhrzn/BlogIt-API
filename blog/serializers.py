@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from taggit.serializers import TaggitSerializer, TagListSerializerField
 
-from .models import Post
+from .models import Comment, Post
 
 
 class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
@@ -13,6 +13,7 @@ class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
 
     tags = TagListSerializerField()
     author = serializers.StringRelatedField()
+    comments_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Post
@@ -23,9 +24,13 @@ class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
             "description",
             "tags",
             "is_active",
+            "comments_count",
             "author",
             "created_at",
             "updated_at",
+        ]
+        read_only_fields = [
+            "slug",
         ]
 
     def create(self, validated_data):
@@ -33,3 +38,20 @@ class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
         Create Post object with passed in user as author, and validated datas.
         """
         return Post.objects.create(author=self.context["author"], **validated_data)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "text",
+            "user",
+        ]
+
+    def create(self, validated_data):
+        return Comment.objects.create(
+            user=self.context["user"], post_id=self.context["post_pk"], **validated_data
+        )
