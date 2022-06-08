@@ -1,6 +1,9 @@
+from django.core.mail import BadHeaderError, send_mail
 from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .filters import PostFilter
@@ -19,6 +22,30 @@ class PostViewSet(ModelViewSet):
     pagination_class = DefaultPageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = PostFilter
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        self._send_mail(serializer.data["title"], request.user.email)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def _send_mail(self, title, email):
+        """
+        Send email to the user that created the post.
+        """
+        try:
+            send_mail(
+                subject=f"Post created: {title}",
+                message="Post created",
+                from_email="sulav@admin.com",
+                recipient_list=[email],
+            )
+        except BadHeaderError:
+            return Response("Invalid header found")
 
     def get_permissions(self):
         """
@@ -59,6 +86,10 @@ class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
 
     def get_permissions(self):
+        """
+        Allow object user and user with staff permission to edit and delete comments
+        else, get only
+        """
         if self.request.user.is_staff:
             return [IsAuthenticated()]
         return [IsAuthenticated(), IsCommentOwnerOrReadOnly()]

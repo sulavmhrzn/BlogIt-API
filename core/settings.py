@@ -162,3 +162,11 @@ SIMPLE_JWT = {
 DJOSER = {
     "USER_CREATE_PASSWORD_RETYPE": True,
 }
+
+# EMAIL
+# For development use (https://github.com/rnwood/smtp4dev)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
