@@ -41,6 +41,10 @@ class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Comment Model
+    """
+
     user = serializers.StringRelatedField()
 
     class Meta:
@@ -52,6 +56,9 @@ class CommentSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        """
+        Create comment object with passed in authenticated user.
+        """
         return Comment.objects.create(
             user=self.context["user"], post_id=self.context["post_pk"], **validated_data
         )

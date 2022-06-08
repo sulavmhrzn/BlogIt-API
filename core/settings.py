@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "taggit",
     "django_filters",
+    "djoser",
     # Custom apps
     "user",
     "blog",
@@ -144,3 +146,19 @@ AUTH_USER_MODEL = "user.User"
 
 # DEBUG_TOOLBAR
 INTERNAL_IPS = ["127.0.0.1"]
+
+# REST FRAMEWORK
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    )
+}
+
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": ("JWT",),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+}
+
+DJOSER = {
+    "USER_CREATE_PASSWORD_RETYPE": True,
+}
