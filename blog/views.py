@@ -10,7 +10,7 @@ from .filters import PostFilter
 from .models import Comment, Post
 from .pagination import DefaultPageNumberPagination
 from .permissions import IsCommentOwnerOrReadOnly, IsOwnerOrReadOnly
-from .serializers import CommentSerializer, PostSerializer
+from .serializers import CommentSerializer, PostListSerializer, PostSerializer
 
 
 class PostViewSet(ModelViewSet):
@@ -24,6 +24,9 @@ class PostViewSet(ModelViewSet):
     filterset_class = PostFilter
 
     def create(self, request, *args, **kwargs):
+        """
+        Overwrite creation to send email after successfull post creation.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -82,6 +85,15 @@ class PostViewSet(ModelViewSet):
         context = super().get_serializer_context()
         context["author"] = self.request.user
         return context
+
+    def get_serializer_class(self):
+        """
+        Returns PostListSerializer wihout description in list
+        PostSerializer with description in retriieve
+        """
+        if self.request.method == "GET" and not self.kwargs.get("pk", ""):
+            return PostListSerializer
+        return PostSerializer
 
 
 class CommentViewSet(ModelViewSet):

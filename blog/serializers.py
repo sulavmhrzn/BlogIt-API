@@ -40,6 +40,25 @@ class PostSerializer(TaggitSerializer, serializers.ModelSerializer):
         return Post.objects.create(author=self.context["author"], **validated_data)
 
 
+class PostListSerializer(PostSerializer):
+    """
+    Post serializer that excludes description.
+    """
+
+    class Meta(PostSerializer.Meta):
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "tags",
+            "is_active",
+            "comments_count",
+            "author",
+            "created_at",
+            "updated_at",
+        ]
+
+
 class CommentSerializer(serializers.ModelSerializer):
     """
     Serializer for Comment Model
