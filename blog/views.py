@@ -66,11 +66,13 @@ class PostViewSet(ModelViewSet):
                 Post.objects.select_related("author")
                 .prefetch_related("tags")
                 .annotate(comments_count=Count("comments"))
+                .order_by("-created_at")
             )
         return (
             Post.objects.select_related("author")
             .filter(is_active=True)
             .annotate(comments_count=Count("comments"))
+            .order_by("-created_at")
         )
 
     def get_serializer_context(self):
